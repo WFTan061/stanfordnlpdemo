@@ -11,8 +11,8 @@ public class PipelineConfig {
     @Bean
     StanfordCoreNLP stanfordCoreNLP(){
         Properties props = new Properties();
-        props.setProperty("annotators","tokenize,ssplit,pos,lemma,ner");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP();
+        props.setProperty("annotators","tokenize,ssplit,pos,parse,lemma,ner,sentiment");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         return pipeline;
     }
 }
