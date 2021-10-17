@@ -32,6 +32,8 @@ import java.util.List;
 public class TestController {
     @Autowired
     private StanfordCoreNLP pipeline;
+
+    private static String[] positivity = {"Very negative" , "Negative" , "Neutral", "Positive", "Very Positive"};
     @PostMapping
     private ResponseEntity<?> testingStuff(HttpServletRequest request, HttpServletResponse response,
                                            @RequestBody TestDTO test){
@@ -43,7 +45,7 @@ public class TestController {
         for(CoreMap sentence: sentimentTest.get(CoreAnnotations.SentencesAnnotation.class)){
             //root of tree.
             final Tree tree = sentence.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
-            transverseTree(tree);
+            transverseTree(tree, test.getSentence());
 //            for(Tree testTree: tree.getChildrenAsList()){
 //                List<Double> annotTest = RNNCoreAnnotations.getPredictionsAsStringList(testTree);
 //                System.out.println("---");
@@ -74,13 +76,31 @@ public class TestController {
         return new ResponseEntity<>("", HttpStatus.OK);
     }
 
-    private void transverseTree(Tree t){
+    /**
+     * Tranversing :
+     * Start 0... to length-1.
+     * Span 0,0 represents start to start
+     * @param t
+     */
+    private void transverseTree(Tree t,String sentence){
             System.out.println("---");
-            System.out.println(t.getSpan());
+
+            String[] indivWords = sentence.split("\\s+");
+            IntPair testPair = t.getSpan();
+            StringBuilder buildSentence = new StringBuilder();
+            for(int j = testPair.getSource(); j <= testPair.getTarget(); j++){
+                buildSentence.append(indivWords[j]);
+                buildSentence.append(" ");
+            }
+            System.out.println("Sentiment Test : "  + buildSentence.toString());
+            System.out.println(t.getSpan() + " : " + t.getClass());
+
             try {
                 List<Double> annotTest = RNNCoreAnnotations.getPredictionsAsStringList(t);
+                int i = 0;
                 for (Double s : annotTest) {
-                    System.out.println(s);
+                    System.out.println(positivity[i] + " : " + s);
+                    i++;
                 }
             }catch(Exception e){
                 System.out.println("Out of bounds or smth.");
@@ -88,7 +108,7 @@ public class TestController {
                 System.out.println("---");
                 for (Tree child : t.getChildrenAsList()) {
                     if (child != null) {
-                        transverseTree(child);
+                        transverseTree(child,sentence);
                     }
                 }
             }
